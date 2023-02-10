@@ -28,4 +28,21 @@ accomodationsRouter.get("/", async (req, res, next) => {
   }
 });
 
+accomodationsRouter.get("/:accomodationId", async (req, res, next) => {
+  try {
+    const accomodation = await AccomodationsModel.findById(
+      req.params.accomodationId
+    ).populate({
+      path: "host",
+    });
+    if (accomodation) {
+      res.send(accomodation);
+    } else {
+      next(createHttpError(404, "No accomodations with the provided id found"));
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default accomodationsRouter;
