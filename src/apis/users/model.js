@@ -28,4 +28,14 @@ usersSchema.pre("save", async function (next) {
   next();
 });
 
+usersSchema.methods.toJSON = function () {
+  const usersMongoDoc = this;
+  const user = usersMongoDoc.toObject();
+  delete user.password;
+  delete user.__v;
+  delete user.createdAt;
+  delete user.updatedAt;
+  return user;
+};
+
 export default model("User", usersSchema);
