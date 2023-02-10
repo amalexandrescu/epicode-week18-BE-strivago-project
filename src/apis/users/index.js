@@ -31,6 +31,25 @@ usersRouter.post("/login", async (req, res, next) => {
   }
 });
 
+usersRouter.post("/register", async (req, res, next) => {
+  try {
+    //expectes email, password and role in req.body (name and surname because I put them required too)
+    const { email, password, role } = req.body;
+    const newUser = await UsersModel(req.body);
+    await newUser.save();
+    if (newUser) {
+      const payload = { _id: newUser._id, role: newUser.role };
+
+      const accessToken = await createAccessToken(payload);
+      res.status(201).send({ accessToken });
+    }
+    //creates a user
+    //returns a valid token
+  } catch (error) {
+    next(error);
+  }
+});
+
 usersRouter.get("/", async (req, res, next) => {
   try {
     const users = await UsersModel.find();
