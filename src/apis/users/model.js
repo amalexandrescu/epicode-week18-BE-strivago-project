@@ -38,4 +38,19 @@ usersSchema.methods.toJSON = function () {
   return user;
 };
 
+usersSchema.static("checkCredentials", async function (email, password) {
+  const user = await this.findOne({ email });
+
+  if (user) {
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    if (passwordMatch) {
+      return user;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+});
+
 export default model("User", usersSchema);
