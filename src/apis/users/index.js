@@ -1,5 +1,6 @@
 import express from "express";
 import createHttpError from "http-errors";
+import mongoose from "mongoose";
 import hostOnlyMiddleware from "../../library/authentication/hostOnly.js";
 import { JWTAuthMiddleware } from "../../library/authentication/jwtAuth.js";
 import { createAccessToken } from "../../library/authentication/jwtTools.js";
@@ -8,6 +9,8 @@ import AccomodationsModel from "../accomodations/model.js";
 
 const usersRouter = express.Router();
 
+//simple post method
+//not required
 usersRouter.post("/", async (req, res, next) => {
   try {
     const newUser = await UsersModel(req.body);
@@ -18,9 +21,12 @@ usersRouter.post("/", async (req, res, next) => {
   }
 });
 
+//login user which generates a valid token if the user already exists
+//otherwise, error (first you must register)
 usersRouter.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    //if the user doesn't exist, cannot generate new token
     const user = await UsersModel.checkCredentials(email, password);
     if (user) {
       const payload = { _id: user._id, role: user.role };
@@ -34,9 +40,10 @@ usersRouter.post("/login", async (req, res, next) => {
   }
 });
 
+//register user which creates a new user and generates a valid token for him
 usersRouter.post("/register", async (req, res, next) => {
   try {
-    //expectes email, password and role in req.body (name and surname because I put them required too)
+    //expectes email, password and role in req.body
     const { email, password, role } = req.body;
     const newUser = await UsersModel(req.body);
     await newUser.save();
@@ -53,6 +60,8 @@ usersRouter.post("/register", async (req, res, next) => {
   }
 });
 
+//get all users
+//not required for hw
 usersRouter.get("/", async (req, res, next) => {
   try {
     const users = await UsersModel.find();
@@ -62,6 +71,9 @@ usersRouter.get("/", async (req, res, next) => {
   }
 });
 
+//a user or a host can get his profile
+//put the token in the authorization headers
+//and you will get all the data for a user that matches the token
 usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const user = await UsersModel.findById(req.user._id);
@@ -71,28 +83,24 @@ usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
   }
 });
 
+//host only endpoint
+//gets all the accomodations of a certain host
 usersRouter.get(
   "/me/accomodations",
+  JWTAuthMiddleware,
   hostOnlyMiddleware,
   async (req, res, next) => {
     try {
-      const user = await UsersModel.findById(req.body.host);
-      const hostId = user._id;
-      console.log(hostId);
-      const accomodations = await AccomodationsModel.find();
+      //user is updated from using JWTAuthMiddleware
+      const accomodations = await AccomodationsModel.find({
+        host: mongoose.Types.ObjectId(req.user._id),
+      });
       if (accomodations) {
-        const searchedAcc = accomodations.filter(
-          (acc) => acc.host.toString() === hostId.toString()
-        );
-        if (searchedAcc) {
-          res.send(searchedAcc);
-        } else {
-          next(
-            createHttpError(404, `This host doesn't have any accomodations yet`)
-          );
-        }
+        res.send(accomodations);
       } else {
-        next(createHttpError(404, "No accomodations found."));
+        next(
+          createHttpError(404, `This host doesn't have any accomodations yet`)
+        );
       }
     } catch (error) {
       next(error);

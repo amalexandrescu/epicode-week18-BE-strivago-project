@@ -7,6 +7,7 @@ import {
   forbiddenHandler,
   genericErrorHAndler,
   unauthorizedHandler,
+  notFoundHandler,
 } from "./errorHandlers.js";
 import listEndpoints from "express-list-endpoints";
 import accomodationsRouter from "./apis/accomodations/index.js";
@@ -29,6 +30,7 @@ server.use("/accomodations", accomodationsRouter);
 server.use(badRequestHandler);
 server.use(unauthorizedHandler);
 server.use(forbiddenHandler);
+server.use(notFoundHandler);
 server.use(genericErrorHAndler);
 
 mongoose.connect(process.env.MONGO_URL);

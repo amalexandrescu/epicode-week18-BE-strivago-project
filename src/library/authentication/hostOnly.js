@@ -2,7 +2,9 @@ import createHttpError from "http-errors";
 import UsersModel from "../../apis/users/model.js";
 
 const hostOnlyMiddleware = async (req, res, next) => {
-  const user = await UsersModel.findById(req.body.host);
+  //this req.user._id is coming from host only middleware where we overwrite the user
+  //if the credentials match
+  const user = await UsersModel.findById(req.user._id);
 
   if (user.role.toString() === "host") {
     next();
