@@ -9,6 +9,7 @@ import {
   unauthorizedHandler,
 } from "./errorHandlers.js";
 import listEndpoints from "express-list-endpoints";
+import accomodationsRouter from "./apis/accomodations/index.js";
 
 const server = express();
 
@@ -22,6 +23,7 @@ server.use(express.json());
 //ENDPOINTS
 
 server.use("/users", usersRouter);
+server.use("/accomodations", accomodationsRouter);
 
 //ERROR HANDLERS
 server.use(badRequestHandler);
