@@ -1,7 +1,10 @@
 import express from "express";
 import createHttpError from "http-errors";
+import hostOnlyMiddleware from "../../library/authentication/hostOnly.js";
+import { JWTAuthMiddleware } from "../../library/authentication/jwtAuth.js";
 import { createAccessToken } from "../../library/authentication/jwtTools.js";
 import UsersModel from "./model.js";
+import AccomodationsModel from "../accomodations/model.js";
 
 const usersRouter = express.Router();
 
@@ -58,5 +61,43 @@ usersRouter.get("/", async (req, res, next) => {
     next(error);
   }
 });
+
+usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    const user = await UsersModel.findById(req.user._id);
+    res.send(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
+usersRouter.get(
+  "/me/accomodations",
+  hostOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const user = await UsersModel.findById(req.body.host);
+      const hostId = user._id;
+      console.log(hostId);
+      const accomodations = await AccomodationsModel.find();
+      if (accomodations) {
+        const searchedAcc = accomodations.filter(
+          (acc) => acc.host.toString() === hostId.toString()
+        );
+        if (searchedAcc) {
+          res.send(searchedAcc);
+        } else {
+          next(
+            createHttpError(404, `This host doesn't have any accomodations yet`)
+          );
+        }
+      } else {
+        next(createHttpError(404, "No accomodations found."));
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 export default usersRouter;

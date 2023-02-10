@@ -1,17 +1,14 @@
 import express from "express";
 import createHttpError from "http-errors";
+import hostOnlyMiddleware from "../../library/authentication/hostOnly.js";
 import AccomodationsModel from "./model.js";
 const accomodationsRouter = express.Router();
 
-accomodationsRouter.post("/", async (req, res, next) => {
+accomodationsRouter.post("/", hostOnlyMiddleware, async (req, res, next) => {
   try {
-    if (req.body.host === "host") {
-      const newAccomodation = await AccomodationsModel(req.body);
-      const { _id } = await newAccomodation.save();
-      res.status(201).send({ _id });
-    } else {
-      next(createHttpError(400, "Please provide a host, not a guest"));
-    }
+    const newAccomodation = await AccomodationsModel(req.body);
+    const { _id } = await newAccomodation.save();
+    res.status(201).send({ _id });
   } catch (error) {
     next(error);
   }
