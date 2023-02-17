@@ -17,7 +17,7 @@ accomodationsRouter.post(
   hostOnlyMiddleware,
   async (req, res, next) => {
     try {
-      const newAccomodation = await AccomodationsModel({
+      const newAccomodation = new AccomodationsModel({
         ...req.body,
         host: req.user._id,
       });

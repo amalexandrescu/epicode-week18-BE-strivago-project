@@ -13,7 +13,7 @@ const usersRouter = express.Router();
 //not required
 usersRouter.post("/", async (req, res, next) => {
   try {
-    const newUser = await UsersModel(req.body);
+    const newUser = new UsersModel(req.body);
     const { _id } = await newUser.save();
     res.status(201).send({ _id });
   } catch (error) {
@@ -43,11 +43,14 @@ usersRouter.post("/login", async (req, res, next) => {
 //register user which creates a new user and generates a valid token for him
 usersRouter.post("/register", async (req, res, next) => {
   try {
-    //expectes email, password and role in req.body
-    const { email, password, role } = req.body;
-    const newUser = await UsersModel(req.body);
+    //expectes email, password in req.body
+    const { email, password } = req.body;
+    const emailAlreadyRegistered = await UsersModel.findOne({ email: email });
+    if (emailAlreadyRegistered)
+      next(createHttpError(400, `User with provided email already exists`));
+    const newUser = new UsersModel(req.body);
     await newUser.save();
-    if (newUser) {
+    if (newUser && email && password) {
       const payload = { _id: newUser._id, role: newUser.role };
 
       const accessToken = await createAccessToken(payload);
