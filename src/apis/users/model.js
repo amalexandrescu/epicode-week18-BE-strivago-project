@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 
 const usersSchema = new Schema(
   {
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     //if I want to implement google OAuth, then the password won't be required
     //because google doesn't share the password with us when performing OAuth
